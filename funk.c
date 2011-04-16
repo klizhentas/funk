@@ -7,10 +7,11 @@
 //Model
 
 typedef enum {
+    EMPTY_LIST,
     INTEGER,
     BOOLEAN,
     CHARACTER,
-    STRING
+    STRING,
 } object_type;
 
 typedef struct {
@@ -37,8 +38,9 @@ typedef struct {
 
 } object;
 
-object* bTrue;
-object* bFalse;
+object* True;
+object* False;
+object* EmptyList;
 
 
 /* no GC so truely "unlimited extent" */
@@ -93,6 +95,12 @@ object* make_string(char* value){
     return obj;
 }
 
+object* make_empty_list(){
+    object* obj = alloc_object();
+    obj->type = EMPTY_LIST;
+    return obj;
+}
+
 bool is_integer(object *obj) {
     return obj->type == INTEGER;
 }
@@ -115,6 +123,10 @@ bool is_character(object *obj) {
 
 bool is_string(object *obj){
     return obj->type == STRING;
+}
+
+bool is_empty_list(object* obj){
+    return obj->type == EMPTY_LIST;
 }
 
 
@@ -205,10 +217,10 @@ bool read_literal(FILE* in, const char* literal){
 
 object* read_boolean(FILE* in){
     if(read_literal(in, "true")) {
-        return bTrue;
+        return True;
     }
     else if (read_literal(in, "false")) {
-        return bFalse;
+        return False;
     }
     else {
         return NULL;
@@ -317,11 +329,31 @@ object* read_string(FILE* in){
     }
 }
 
+object* read_empty_list(FILE* in){
+    char c = getc(in);
+    if(c == '('){
+        eat_whitespace(in);
+        c = getc(in);
+        if(c == ')'){
+            return EmptyList;
+        }
+        else {
+            fprintf(stderr, "expected ')'");
+            exit(1);
+        }
+    }
+    else{
+        ungetc(c, in);
+        return NULL;
+    }
+}
+
 object* (*READERS[]) (FILE*in) = {
     read_integer, 
     read_boolean, 
     read_character,
-    read_string
+    read_string,
+    read_empty_list
 };
 
 object* read(FILE* in){
@@ -431,11 +463,22 @@ bool print_string(object* obj){
     }
 }
 
+bool print_empty_list(object* obj){
+    if(is_empty_list(obj)){
+        printf("()");
+        return true;
+    }
+    else{
+        return false;
+    }
+}
+
 bool (*PRINTERS[]) (object* obj) = {
     print_integer, 
     print_boolean, 
     print_character, 
-    print_string
+    print_string,
+    print_empty_list
 };
 
 
@@ -452,8 +495,9 @@ void print(object *obj){
 }
 
 void init(){
-    bTrue = make_boolean(true);
-    bFalse = make_boolean(false);
+    True = make_boolean(true);
+    False = make_boolean(false);
+    EmptyList = make_empty_list();
 }
 
 //REPL
