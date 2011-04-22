@@ -71,9 +71,34 @@ static bool print_string(object* obj){
     }
 }
 
-static bool print_empty_list(object* obj){
+void print(object *obj);
+
+static void print_pair_contents(object* obj){
+    print(car(obj));
+
+    object* cdr_obj = cdr(obj);
+    if(is_empty_list(cdr_obj)){
+        //do nothing
+    }
+    else if (is_pair(cdr_obj)){
+        printf(" ");
+        print_pair_contents(cdr_obj);
+    }
+    else {
+        printf(" . ");
+        print(cdr_obj);
+    }
+}
+
+static bool print_pair(object* obj){
     if(is_empty_list(obj)){
         printf("()");
+        return true;
+    }
+    else if(is_pair(obj)){
+        printf("(");
+        print_pair_contents(obj);
+        printf(")");
         return true;
     }
     else{
@@ -86,7 +111,7 @@ static bool (*PRINTERS[]) (object* obj) = {
     print_boolean, 
     print_character, 
     print_string,
-    print_empty_list
+    print_pair
 };
 
 

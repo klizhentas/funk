@@ -61,6 +61,22 @@ object* make_empty_list(){
     return obj;
 }
 
+object* cons(object* car, object* cdr){
+    object* obj = alloc_object();
+    obj->type = PAIR;
+    obj->data.pair.car = car;
+    obj->data.pair.cdr = cdr;
+    return obj;
+}
+
+object *car(object *pair) {
+    return pair->data.pair.car;
+}
+
+object *cdr(object *pair) {
+    return pair->data.pair.cdr;
+}
+
 bool is_integer(object *obj) {
     return obj->type == INTEGER;
 }
@@ -87,4 +103,8 @@ bool is_string(object *obj){
 
 bool is_empty_list(object* obj){
     return obj->type == EMPTY_LIST;
+}
+
+bool is_pair(object* obj){
+    return obj->type == PAIR;
 }

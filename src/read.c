@@ -201,18 +201,56 @@ static object* read_string(FILE* in){
     }
 }
 
-static object* read_empty_list(FILE* in){
+object* read(FILE* in);
+
+static object* read_pair_contents(FILE* in){
+
+    eat_whitespace(in);
     char c = getc(in);
-    if(c == '('){
-        eat_whitespace(in);
-        c = getc(in);
-        if(c == ')'){
-            return EmptyList;
-        }
-        else {
-            fprintf(stderr, "expected ')'");
+    if(c == ')'){
+        return EmptyList;
+    }
+
+    ungetc(c, in);
+    object* car_obj = read(in);
+
+    eat_whitespace(in);
+
+    c = getc(in);
+
+    /*read classic pair*/
+    if(c == '.'){
+        c = peek(in);
+        if(!is_delimiter(c)){
+            fprintf(stderr, "hey, '.' is not followed by delimiter!");
             exit(1);
         }
+
+        object* cdr_obj = read(in);                
+        eat_whitespace(in);
+            
+        c = getc(in);
+
+        if(c != ')'){
+            fprintf(stderr, "Mismatched parenthesis! I'm looking for ')'");
+            exit(1);
+        }
+                
+        return cons(car_obj, cdr_obj);
+    }
+    /*read list*/
+    else {
+        ungetc(c, in);
+        object* cdr_obj = read_pair_contents(in);
+        return cons(car_obj, cdr_obj);
+    }
+}
+
+static object* read_pair(FILE* in){    
+    char c = getc(in);
+
+    if(c == '('){
+        return read_pair_contents(in);
     }
     else{
         ungetc(c, in);
@@ -225,7 +263,7 @@ static object* (*READERS[]) (FILE*in) = {
     read_boolean, 
     read_character,
     read_string,
-    read_empty_list
+    read_pair
 };
 
 object* read(FILE* in){

@@ -14,6 +14,7 @@ typedef enum {
     BOOLEAN,
     CHARACTER,
     STRING,
+    PAIR
 } object_type;
 
 typedef struct {
@@ -36,6 +37,11 @@ typedef struct {
             char* value;
         } string;
 
+        struct {
+            struct object* car;
+            struct object* cdr;
+        } pair;
+
     } data;
 
 } object;
@@ -48,6 +54,11 @@ object* make_character(char value);
 object* make_string(char* value);
 object* make_empty_list();
 
+object* cons(object* car, object* cdr);
+object *car(object *pair);
+object *cdr(object *pair);
+
+
 bool is_integer(object *obj);
 bool is_boolean(object *obj);
 bool is_true(object *obj);
@@ -55,6 +66,7 @@ bool is_false(object *obj);
 bool is_character(object *obj);
 bool is_string(object *obj);
 bool is_empty_list(object* obj);
+bool is_pair(object* obj);
 
 
 #endif
