@@ -1,146 +1,18 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include <stdbool.h>
+#include <stdlib.h>
 
-//Model
+#include "model.h"
+#include "read.h"
+#include "globals.h"
 
-typedef enum {
-    EMPTY_LIST,
-    INTEGER,
-    BOOLEAN,
-    CHARACTER,
-    STRING,
-} object_type;
-
-typedef struct {
-    object_type type;
-
-    union {
-        struct {
-            long value;
-        } integer;
-
-        struct {
-            bool value;
-        } boolean;
-
-        struct {
-            char value;
-        } character;
-
-        struct {
-            char* value;
-        } string;
-
-    } data;
-
-} object;
-
-object* True;
-object* False;
-object* EmptyList;
-
-
-/* no GC so truely "unlimited extent" */
-object* alloc_object(void) {
-    object *obj;
-
-    obj = malloc(sizeof(object));
-    if (obj == NULL) {
-        fprintf(stderr, "out of memory\n");
-        exit(1);
-    }
-    return obj;
-}
-
-object* make_integer(long value) {
-    object* obj = alloc_object();
-
-    obj->type = INTEGER;
-    obj->data.integer.value = value;
-    
-    return obj;
-}
-
-object* make_boolean(bool value) {
-    object* obj  = alloc_object();
-
-    obj->type = BOOLEAN;
-    obj->data.boolean.value = value;
-
-    return obj;
-}
-
-object* make_character(char value) {
-    object* obj = alloc_object();
-    
-    obj->type = CHARACTER;
-    obj->data.character.value = value;
-
-    return obj;
-}
-
-object* make_string(char* value){
-    object* obj = alloc_object();
-    
-    obj->type = STRING;
-    obj->data.string.value = malloc(strlen(value) + 1);
-    if(obj->data.string.value == NULL){
-        fprintf(stderr, "out of memory");
-        exit(1);
-    }
-    strcpy(obj->data.string.value, value);
-    return obj;
-}
-
-object* make_empty_list(){
-    object* obj = alloc_object();
-    obj->type = EMPTY_LIST;
-    return obj;
-}
-
-bool is_integer(object *obj) {
-    return obj->type == INTEGER;
-}
-
-bool is_boolean(object *obj) {
-    return obj->type == BOOLEAN;
-}
-
-bool is_true(object *obj){
-    return is_boolean(obj) && obj->data.boolean.value == true;
-}
-
-bool is_false(object *obj){
-    return is_boolean(obj) && ! is_true(obj);
-}
-
-bool is_character(object *obj) {
-    return obj->type == CHARACTER;
-}
-
-bool is_string(object *obj){
-    return obj->type == STRING;
-}
-
-bool is_empty_list(object* obj){
-    return obj->type == EMPTY_LIST;
-}
-
-
-//READ
-
-/***************************** READ ******************************/
-
-char is_delimiter(int c) {
+static char is_delimiter(int c) {
     return isspace(c) || c == EOF ||
            c == '('   || c == ')' ||
-        c == '"'   || c == ';';
+           c == '"'   || c == ';';
 }
 
-int peek(FILE *in) {
+static int peek(FILE *in) {
     int c;
 
     c = getc(in);
@@ -148,7 +20,7 @@ int peek(FILE *in) {
     return c;
 }
 
-void eat_whitespace(FILE *in) {
+static void eat_whitespace(FILE *in) {
     int c;
     
     while ((c = getc(in)) != EOF) {
@@ -164,7 +36,7 @@ void eat_whitespace(FILE *in) {
     }
 }
 
-object* read_integer(FILE*in){
+static object* read_integer(FILE*in){
     char c;
     long value = 0;
     short sign = 1;
@@ -199,7 +71,7 @@ object* read_integer(FILE*in){
     }
 }
 
-bool read_literal(FILE* in, const char* literal){
+static bool read_literal(FILE* in, const char* literal){
     int len = strlen(literal);
     char chars[len];
 
@@ -215,7 +87,7 @@ bool read_literal(FILE* in, const char* literal){
     return true;
 }
 
-object* read_boolean(FILE* in){
+static object* read_boolean(FILE* in){
     if(read_literal(in, "true")) {
         return True;
     }
@@ -227,7 +99,7 @@ object* read_boolean(FILE* in){
     }
 }
 
-object* read_character(FILE* in){
+static object* read_character(FILE* in){
     char c = getc(in);
     if(c == '\\') {
         if(read_literal(in, "newline")){
@@ -255,7 +127,7 @@ object* read_character(FILE* in){
     }
 }
 
-object* read_string(FILE* in){
+static object* read_string(FILE* in){
     int buffer_max = 1024;
     char buffer[buffer_max];
     char read_c;
@@ -329,7 +201,7 @@ object* read_string(FILE* in){
     }
 }
 
-object* read_empty_list(FILE* in){
+static object* read_empty_list(FILE* in){
     char c = getc(in);
     if(c == '('){
         eat_whitespace(in);
@@ -348,7 +220,7 @@ object* read_empty_list(FILE* in){
     }
 }
 
-object* (*READERS[]) (FILE*in) = {
+static object* (*READERS[]) (FILE*in) = {
     read_integer, 
     read_boolean, 
     read_character,
@@ -383,137 +255,4 @@ object* read(FILE* in){
         fprintf(stderr, "object not followed by delimiter\n");
         exit(1);
     }
-}
-
-//EVAL
-
-// until we have lists and symbols just echo
-object* eval(object *exp) {
-    return exp;
-}
-
-
-//PRINT
-
-bool print_integer(object* obj){
-    if(is_integer(obj)){
-        printf("%ld", obj->data.integer.value);
-        return true;
-    }
-    return false;
-}
-
-bool print_boolean(object* obj){
-    if(is_boolean(obj)){
-        if(is_true(obj)){
-            printf("true");
-        }
-        else{
-            printf("false");
-        }        
-        return true;
-    }
-    else{
-        return false;
-    }
-}
-
-bool print_character(object* obj){
-    if(is_character(obj)){
-        if(obj->data.character.value == '\n'){
-            printf("\\newline");
-        }
-        else if(obj->data.character.value == '\t'){
-            printf("\\tab");
-        }
-        else if(obj->data.character.value == ' '){
-            printf("\\space");
-        }
-        else{
-            printf("\\%c", obj->data.character.value);
-        }
-    }
-}
-
-bool print_string(object* obj){
-    if(is_string(obj)){
-        char* str = obj->data.string.value;
-        putchar('"');
-        while (*str != '\0') {
-            switch (*str) {
-            case '\n':
-                printf("\\n");
-                break;
-            case '\\':
-                printf("\\\\");
-                break;
-            case '"':
-                printf("\\\"");
-                break;
-            default:
-                putchar(*str);
-            }
-            str++;
-        }
-        putchar('"');
-        return true;
-    }
-    else{
-        return false;
-    }
-}
-
-bool print_empty_list(object* obj){
-    if(is_empty_list(obj)){
-        printf("()");
-        return true;
-    }
-    else{
-        return false;
-    }
-}
-
-bool (*PRINTERS[]) (object* obj) = {
-    print_integer, 
-    print_boolean, 
-    print_character, 
-    print_string,
-    print_empty_list
-};
-
-
-void print(object *obj){
-
-    for(int i = 0; i< sizeof(PRINTERS)/sizeof(PRINTERS[0]); ++i){
-        if( (*PRINTERS[i])(obj) ) {
-            return;
-        }
-    }
-    
-    fprintf(stderr, "could not print unknown object");
-    exit(1);
-}
-
-void init(){
-    True = make_boolean(true);
-    False = make_boolean(false);
-    EmptyList = make_empty_list();
-}
-
-//REPL
-
-int main(void) {
-
-    printf("Welcome to FUNK "
-           "Use ctrl-c to exit.\n");
-
-    init();
-
-    while (1) {
-        printf("f> ");
-        print(eval(read(stdin)));
-        printf("\n");
-    }
-
-    return 0;
 }
