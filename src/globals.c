@@ -4,6 +4,7 @@ object* True;
 object* False;
 object* EmptyList;
 symtable SymbolTable;
+object* QuoteSymbol;
 
 
 void globals_init() {
@@ -11,5 +12,6 @@ void globals_init() {
     False = make_boolean(false);
     EmptyList = make_empty_list();
     SymbolTable = make_symtable();
+    QuoteSymbol = make_symbol("quote");
 }
 

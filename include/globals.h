@@ -13,6 +13,7 @@ extern object* True;
 extern object* False;
 extern object* EmptyList;
 extern symtable SymbolTable;
+extern object* QuoteSymbol;
 
 void globals_init();
 

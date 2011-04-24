@@ -305,13 +305,25 @@ static object* read_symbol(FILE* in){
     }
 }
 
+static object* read_quote(FILE* in){
+    char c = getc(in);
+    if(c == '\''){
+        return cons(QuoteSymbol, cons(read(in), EmptyList));
+    }
+    else {
+        ungetc(c, in);
+        return NULL;
+    }
+}
+
 static object* (*READERS[]) (FILE*in) = {
     read_integer, 
     read_boolean, 
     read_character,
     read_string,
     read_pair, 
-    read_symbol
+    read_symbol,
+    read_quote
 };
 
 object* read(FILE* in){
