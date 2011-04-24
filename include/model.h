@@ -12,12 +12,13 @@ typedef enum {
     EMPTY_LIST,
     INTEGER,
     BOOLEAN,
+    SYMBOL,
     CHARACTER,
     STRING,
     PAIR
 } object_type;
 
-typedef struct {
+typedef struct _object {
     object_type type;
 
     union {
@@ -38,9 +39,13 @@ typedef struct {
         } string;
 
         struct {
-            struct object* car;
-            struct object* cdr;
+            struct _object* car;
+            struct _object* cdr;
         } pair;
+
+        struct {
+            char* value;
+        } symbol;
 
     } data;
 
@@ -53,6 +58,7 @@ object* make_boolean(bool value);
 object* make_character(char value);
 object* make_string(char* value);
 object* make_empty_list();
+object* make_symbol(char* value);
 
 object* cons(object* car, object* cdr);
 object *car(object *pair);
@@ -67,6 +73,8 @@ bool is_character(object *obj);
 bool is_string(object *obj);
 bool is_empty_list(object* obj);
 bool is_pair(object* obj);
+bool is_symbol(object *obj);
+bool equals_to_symbol(char* name, object* obj);
 
 
 #endif

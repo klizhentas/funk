@@ -7,10 +7,12 @@
 #define H_FUNK_GLOBALS
 
 #include "model.h"
+#include "symtable.h"
 
 extern object* True;
 extern object* False;
 extern object* EmptyList;
+extern symtable SymbolTable;
 
 void globals_init();
 

@@ -3,6 +3,8 @@
 #include <string.h>
 
 #include "model.h"
+#include "symtable.h"
+#include "globals.h"
 
 object* alloc_object(void) {
     object *obj;
@@ -61,11 +63,11 @@ object* make_empty_list(){
     return obj;
 }
 
-object* cons(object* car, object* cdr){
+object* cons(object* car_obj, object* cdr_obj){
     object* obj = alloc_object();
     obj->type = PAIR;
-    obj->data.pair.car = car;
-    obj->data.pair.cdr = cdr;
+    obj->data.pair.car = car_obj;
+    obj->data.pair.cdr = cdr_obj;
     return obj;
 }
 
@@ -75,6 +77,24 @@ object *car(object *pair) {
 
 object *cdr(object *pair) {
     return pair->data.pair.cdr;
+}
+
+object* make_symbol(char* name){
+    object* symbol = symtable_lookup(SymbolTable, name);
+    if(symbol != NULL){
+        return symbol;
+    }
+
+    symbol = alloc_object();
+    symbol->type = SYMBOL;
+    symbol->data.symbol.value = (malloc(strlen(name) + 1));
+    if(symbol->data.symbol.value == NULL){
+        fprintf(stderr, "out of memory\n");
+        exit(1);
+    }
+    strcpy(symbol->data.symbol.value, name);
+    symtable_put(SymbolTable, name, symbol);
+    return symbol;    
 }
 
 bool is_integer(object *obj) {
@@ -108,3 +128,12 @@ bool is_empty_list(object* obj){
 bool is_pair(object* obj){
     return obj->type == PAIR;
 }
+
+bool is_symbol(object *obj) {
+    return obj->type == SYMBOL;
+}
+
+bool equals_to_symbol(char* name, object* obj) {
+    return strcmp(name, obj->data.symbol.value) == 0;
+}
+

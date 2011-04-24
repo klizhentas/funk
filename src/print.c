@@ -106,12 +106,22 @@ static bool print_pair(object* obj){
     }
 }
 
+static bool print_symbol(object* obj){
+    if(is_symbol(obj)){
+        printf("%s", obj->data.symbol.value);
+    }
+    else{
+        return false;
+    }
+}
+
 static bool (*PRINTERS[]) (object* obj) = {
     print_integer, 
     print_boolean, 
     print_character, 
     print_string,
-    print_pair
+    print_pair,
+    print_symbol
 };
 
 

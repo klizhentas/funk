@@ -12,6 +12,11 @@ static char is_delimiter(int c) {
            c == '"'   || c == ';';
 }
 
+static char is_initial(int c) {
+    return isalpha(c) || c == '*' || c == '/' || c == '>' ||
+        c == '<' || c == '=' || c == '?' || c == '!';
+}
+
 static int peek(FILE *in) {
     int c;
 
@@ -258,12 +263,55 @@ static object* read_pair(FILE* in){
     }
 }
 
+static object* read_symbol(FILE* in){
+    int buffer_max = 1024;
+    char buffer[buffer_max];
+    
+    char c = getc(in);
+    
+    if(is_initial(c) || 
+       ((c == '+' || c == '-') && 
+        is_delimiter(peek(in)))){
+        int i = 0;
+        while(is_initial(c) || 
+              isdigit(c) ||
+              c == '+' || 
+              c == '-' || 
+              c == '_'){
+            if(i < buffer_max - 1){
+                buffer[i++] = c;
+            }
+            else{
+                fprintf(stderr, "symbol is too long "
+                        "Maximum length is %d\n", buffer_max - 1);
+                exit(1);
+            }
+            c = getc(in);
+        }
+
+        if(is_delimiter(c)){
+            ungetc(c, in);
+            buffer[i] = '\0';
+            return make_symbol(buffer);
+        }
+        else{
+            fprintf(stderr, "symbol is not followed by delimiter, unexpected %c", c);
+            exit(1);
+        }
+    }
+    else{
+        ungetc(c, in);
+        return NULL;
+    }
+}
+
 static object* (*READERS[]) (FILE*in) = {
     read_integer, 
     read_boolean, 
     read_character,
     read_string,
-    read_pair
+    read_pair, 
+    read_symbol
 };
 
 object* read(FILE* in){
