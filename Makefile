@@ -1,5 +1,5 @@
 CC = cc
-CFLAGS = $(include_dirs) $(use_c99)
+CFLAGS = $(include_dirs) $(use_c99) -g
 include_dirs = -Iinclude
 use_c99 = -std=c99
 objects = $(patsubst %.c,%.o,$(wildcard src/*.c))

@@ -15,8 +15,10 @@ typedef enum {
     SYMBOL,
     CHARACTER,
     STRING,
-    PAIR
+    PAIR,
+    BUILTIN_FN
 } object_type;
+
 
 typedef struct _object {
     object_type type;
@@ -47,9 +49,15 @@ typedef struct _object {
             char* value;
         } symbol;
 
+        struct {
+            struct _object* (*value)(struct _object* arguments);
+        } builtin_fn;
+
     } data;
 
 } object;
+
+typedef object* (*fn_pointer)(object *arguments);
 
 object* alloc_object(void);
 
@@ -59,10 +67,11 @@ object* make_character(char value);
 object* make_string(char* value);
 object* make_empty_list();
 object* make_symbol(char* value);
+object* make_builtin_fn(fn_pointer pfn);
 
 object* cons(object* car, object* cdr);
-object *car(object *pair);
-object *cdr(object *pair);
+object* car(object *pair);
+object* cdr(object *pair);
 
 
 bool is_integer(object *obj);
@@ -74,7 +83,8 @@ bool is_string(object *obj);
 bool is_empty_list(object* obj);
 bool is_pair(object* obj);
 bool is_symbol(object *obj);
-bool equals_to_symbol(char* name, object* obj);
+bool is_builtin_fn(object* obj);
+
 
 #define caar(obj)   car(car(obj))
 #define cadr(obj)   car(cdr(obj))

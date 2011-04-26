@@ -7,8 +7,9 @@
 #define H_FUNK_EVAL
 
 #include "model.h"
+#include "environment.h"
 
-object* eval(object *exp);
+object* eval(object *exp, environment* env);
 
 #endif
 

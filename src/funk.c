@@ -14,7 +14,7 @@ int main(void) {
 
     while (1) {
         printf("f> ");
-        print(eval(read(stdin)));
+        print(eval(read(stdin), GlobalEnvironment));
         printf("\n");
     }
 

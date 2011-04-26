@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "model.h"
-#include "symtable.h"
+#include "hashtable.h"
 #include "globals.h"
 
 object* alloc_object(void) {
@@ -57,6 +57,13 @@ object* make_string(char* value){
     return obj;
 }
 
+static object make_auto_string(char* value){
+    object obj;
+    obj.type = STRING;
+    obj.data.string.value = value;
+    return obj;
+}
+
 object* make_empty_list(){
     object* obj = alloc_object();
     obj->type = EMPTY_LIST;
@@ -80,7 +87,9 @@ object *cdr(object *pair) {
 }
 
 object* make_symbol(char* name){
-    object* symbol = symtable_lookup(SymbolTable, name);
+
+    object name_string = make_auto_string(name);
+    object* symbol = hashtable_lookup(SymbolTable, &name_string);
     if(symbol != NULL){
         return symbol;
     }
@@ -93,8 +102,15 @@ object* make_symbol(char* name){
         exit(1);
     }
     strcpy(symbol->data.symbol.value, name);
-    symtable_put(SymbolTable, name, symbol);
-    return symbol;    
+    hashtable_put(SymbolTable, symbol, symbol);
+    return symbol;
+}
+
+object* make_builtin_fn(fn_pointer pfn){
+    object* obj = alloc_object();
+    obj->type = BUILTIN_FN;
+    obj->data.builtin_fn.value = pfn;
+    return obj;
 }
 
 bool is_integer(object *obj) {
@@ -133,7 +149,6 @@ bool is_symbol(object *obj) {
     return obj->type == SYMBOL;
 }
 
-bool equals_to_symbol(char* name, object* obj) {
-    return strcmp(name, obj->data.symbol.value) == 0;
+bool is_builtin_fn(object* obj) {
+    return obj->type == BUILTIN_FN;
 }
-
