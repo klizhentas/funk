@@ -86,6 +86,14 @@ object *cdr(object *pair) {
     return pair->data.pair.cdr;
 }
 
+void set_car(object* obj, object* value) {
+    obj->data.pair.car = value;
+}
+
+void set_cdr(object* obj, object* value) {
+    obj->data.pair.cdr = value;
+}
+
 object* make_symbol(char* name){
 
     object name_string = make_auto_string(name);
@@ -110,6 +118,17 @@ object* make_builtin_fn(fn_pointer pfn){
     object* obj = alloc_object();
     obj->type = BUILTIN_FN;
     obj->data.builtin_fn.value = pfn;
+    return obj;
+}
+
+object* make_compound_fn(object* parameters, object* body, environment* env){
+    object* obj = alloc_object();
+
+    obj->type = COMPOUND_FN;
+    obj->data.compound_fn.parameters = parameters;
+    obj->data.compound_fn.body = body;
+    obj->data.compound_fn.env = env;
+
     return obj;
 }
 
@@ -151,4 +170,12 @@ bool is_symbol(object *obj) {
 
 bool is_builtin_fn(object* obj) {
     return obj->type == BUILTIN_FN;
+}
+
+bool is_compound_fn(object *obj) {
+    return obj->type == COMPOUND_FN;
+}
+
+bool is_fn(object* obj) {
+    return is_builtin_fn(obj) || is_compound_fn(obj);
 }

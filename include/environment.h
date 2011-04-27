@@ -8,6 +8,8 @@ typedef struct environment_ {
     hashtable* variables;
 } environment;
 
+environment* extend_environment(object* vars, object* vals, environment* enclosing_environment);
+
 environment* make_environment(environment* enclosing_environment);
 
 void define_variable(object* var, object* val, environment* env);

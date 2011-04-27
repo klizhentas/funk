@@ -21,6 +21,7 @@ extern object* QuoteSymbol;
 extern object* DefineSymbol;
 extern object* SetSymbol;
 extern object* IfSymbol;
+extern object* LambdaSymbol;
 
 void globals_init();
 

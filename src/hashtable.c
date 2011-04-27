@@ -20,7 +20,7 @@ static char* string_from_object(object* obj){
         return obj->data.string.value;
     }
     else {
-        fprintf(stderr, "unknown symbol type\n");
+        fprintf(stderr, "unknown symbol type: %d %d\n", obj->type, COMPOUND_FN);
         exit(1);
     }
 }

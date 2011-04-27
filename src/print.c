@@ -115,13 +115,23 @@ static bool print_symbol(object* obj){
     }
 }
 
+static bool print_fn(object* obj){
+    if(is_fn(obj)){
+        printf("<#function>");
+    }
+    else{
+        return false;
+    }
+}
+
 static bool (*PRINTERS[]) (object* obj) = {
     print_integer, 
     print_boolean, 
     print_character, 
     print_string,
     print_pair,
-    print_symbol
+    print_symbol,
+    print_fn
 };
 
 

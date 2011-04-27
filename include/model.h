@@ -9,16 +9,19 @@
 #include <stdbool.h>
 
 typedef enum {
-    EMPTY_LIST,
+    EMPTY_LIST = 0,
     INTEGER,
     BOOLEAN,
     SYMBOL,
     CHARACTER,
     STRING,
     PAIR,
-    BUILTIN_FN
+    BUILTIN_FN, 
+    COMPOUND_FN
 } object_type;
 
+
+struct environment_;
 
 typedef struct _object {
     object_type type;
@@ -53,6 +56,12 @@ typedef struct _object {
             struct _object* (*value)(struct _object* arguments);
         } builtin_fn;
 
+        struct {
+            struct _object* parameters;
+            struct _object* body;
+            struct environment_* env;
+        } compound_fn;
+
     } data;
 
 } object;
@@ -68,11 +77,14 @@ object* make_string(char* value);
 object* make_empty_list();
 object* make_symbol(char* value);
 object* make_builtin_fn(fn_pointer pfn);
+object* make_compound_fn(object *parameters, object *body, struct environment_* env);
 
 object* cons(object* car, object* cdr);
 object* car(object *pair);
 object* cdr(object *pair);
 
+void set_car(object* obj, object* value);
+void set_cdr(object* obj, object* value);
 
 bool is_integer(object *obj);
 bool is_boolean(object *obj);
@@ -84,6 +96,8 @@ bool is_empty_list(object* obj);
 bool is_pair(object* obj);
 bool is_symbol(object *obj);
 bool is_builtin_fn(object* obj);
+bool is_compound_fn(object *obj);
+bool is_fn(object* obj);
 
 
 #define caar(obj)   car(car(obj))

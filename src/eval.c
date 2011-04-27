@@ -47,12 +47,53 @@ bool is_definition(object *exp) {
 }
 
 object* definition_variable(object *exp) {
+    if (is_symbol(cadr(exp))) {
+        return cadr(exp);
+    }
+    else {
+        return caadr(exp);
+    }
+}
+
+object* make_lambda(object* parameters, object* body);
+
+object* definition_value(object *exp) {
+    if (is_symbol(cadr(exp))) {
+        return caddr(exp);
+    }
+    else {
+        return make_lambda(cdadr(exp), cddr(exp));
+    }
+}
+
+object* make_lambda(object* parameters, object* body) {
+    return cons(LambdaSymbol, cons(parameters, body));
+}
+
+char is_lambda(object *exp) {
+    return is_tagged_list(exp, LambdaSymbol);
+}
+
+object* lambda_parameters(object *exp) {
     return cadr(exp);
 }
 
-object* definition_value(object *exp) {
-    return caddr(exp);
+object* lambda_body(object *exp) {
+    return cddr(exp);
 }
+
+bool is_last_exp(object* seq) {
+    return is_empty_list(cdr(seq));
+}
+
+object* first_exp(object *seq) {
+    return car(seq);
+}
+
+object* rest_exps(object *seq) {
+    return cdr(seq);
+}
+
 
 object* eval_assignment(object *exp, environment *env) {
     set_variable_value(
@@ -62,7 +103,7 @@ object* eval_assignment(object *exp, environment *env) {
     return assignment_variable(exp);    
 }
 
-object *eval_definition(object *exp, environment *env) {
+object* eval_definition(object *exp, environment *env) {
     define_variable(
                     definition_variable(exp),
                     eval(definition_value(exp), env),
@@ -116,6 +157,42 @@ bool is_true_expression(object* exp){
     }
 }
 
+bool is_application(object *exp) {
+    return is_pair(exp);
+}
+
+object* operator(object *exp) {
+    return car(exp);
+}
+
+object* operands(object *exp) {
+    return cdr(exp);
+}
+
+char is_no_operands(object *ops) {
+    return is_empty_list(ops);
+}
+
+object* first_operand(object *ops) {
+    return car(ops);
+}
+
+object* rest_operands(object *ops) {
+    return cdr(ops);
+}
+
+object* eval(object* exp, environment* env);
+
+object* list_of_values(object *exps, environment* env) {
+    if (is_no_operands(exps)) {
+        return EmptyList;
+    }
+    else {
+        return cons(eval(first_operand(exps), env),
+                    list_of_values(rest_operands(exps), env));
+    }
+}
+
 
 
 object *eval(object *exp, environment* env) {
@@ -142,6 +219,38 @@ object *eval(object *exp, environment* env) {
             else {
                 exp = if_alternative(exp);
             }
+        }
+        else if (is_lambda(exp)) {
+            return make_compound_fn(
+                                    lambda_parameters(exp),
+                                    lambda_body(exp),
+                                    env);
+        }
+        else if (is_application(exp)) {
+            object* procedure = eval(operator(exp), env);
+            object* arguments = list_of_values(operands(exp), env);
+
+            if(is_builtin_fn(procedure)){
+                
+                return (procedure->data.builtin_fn.value)(arguments);
+            }
+            else if (is_compound_fn(procedure)) {
+                env = extend_environment(
+                    procedure->data.compound_fn.parameters,
+                    arguments,
+                    procedure->data.compound_fn.env);
+                exp = procedure->data.compound_fn.body;
+                while (!is_last_exp(exp)) {
+                    eval(first_exp(exp), env);
+                    exp = rest_exps(exp);
+                }
+                exp = first_exp(exp);
+            }
+            else {
+                fprintf(stderr, "expected procedure, got something else\n");
+                exit(1);                
+            }
+
         }
         else {
             fprintf(stderr, "cannot eval unknown expression type\n");
